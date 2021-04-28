@@ -4,10 +4,10 @@ const file = new static.Server('./');
 const crypto = require('crypto');
 process.env.GUID = "611ccef9-8647-4981-b4f4-d1eb9928ac64";
 function generateAcceptValue(acceptKey) {
-  return crypto
-    .createHash('sha1')
-    .update(acceptKey + process.env.GUID, 'binary')
-    .digest('base64');
+  console.log(acceptKey.length)
+  console.log('258EAFA5-E914-47DA-95CA-C5AB0DC85B11'.length);
+  console.log((acceptKey + '258EAFA5-E914–47DA-95CA-C5AB0DC85B11').length)
+  return crypto.createHash('sha1').update(acceptKey + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', 'binary').digest('base64');
 }
 
 
@@ -15,7 +15,7 @@ function generateAcceptValue(acceptKey) {
 const server = http.createServer((req, res) => {
   req.addListener('end', () => file.serve(req, res)).resume();
 });
-const port = 3333;
+const port = 7777;
 server.listen(port, () => console.log(`Server running at http://localhost:${port}`));
 server.on('upgrade', (req, socket) => {
   // Make sure that we only handle WebSocket upgrade requests
@@ -28,12 +28,13 @@ server.on('upgrade', (req, socket) => {
 
   // Read the websocket key provided by the client: 
   const acceptKey = req.headers['sec-websocket-key'];
-  console.log("accespt key = "+acceptKey)
+  console.log("accespt key = " + acceptKey)
   // Generate the response value to use in the response: 
   const hash = generateAcceptValue(acceptKey);
-  console.log("hash:"+hash)
+  console.log("hash:" + hash);
   // Write the HTTP response into an array of response lines: 
-  const responseHeaders = ['HTTP/1.1 101 Web Socket Protocol Handshake', 'Upgrade: WebSocket', 'Connection: Upgrade', `Sec-WebSocket-Accept: ${hash}`];
+  const responseHeaders = [ 'HTTP/1.1 101 Web Socket Protocol Handshake', 'Upgrade: WebSocket', 'Connection: Upgrade', `Sec-WebSocket-Accept: ${hash}` ];
+
   const protocol = req.headers['sec-websocket-protocol'];
   // If provided, they'll be formatted as a comma-delimited string of protocol
   // names that the client supports; we'll need to parse the header value, if
@@ -45,6 +46,7 @@ server.on('upgrade', (req, socket) => {
     // Tell the client that we agree to communicate with JSON data
     responseHeaders.push(`Sec-WebSocket-Protocol: json`);
   }
+  console.log("end of header")
   // Write the response back to the client socket, being sure to append two 
   // additional newlines so that the browser recognises the end of the response 
   // header and doesn't continue to wait for more header data: 
@@ -116,6 +118,7 @@ function parseMessage(buffer) {
       throw new Error('Large payloads not currently implemented');
     }
   }
+  const data = Buffer.alloc(payloadLength);
   if (isMasked) {
     maskingKey = buffer.readUInt32BE(currentOffset);
     currentOffset += 4;
