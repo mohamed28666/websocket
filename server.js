@@ -51,13 +51,18 @@ server.on('upgrade', (req, socket) => {
   // additional newlines so that the browser recognises the end of the response 
   // header and doesn't continue to wait for more header data: 
   socket.write(responseHeaders.join('\r\n') + '\r\n\r\n');
+ 
   socket.on('data', buffer => {
+
+    
     const message = parseMessage(buffer);
+    console.log("the message"+message)
     if (message) {
       // For our convenience, so we can see what the client sent
       console.log(message);
       // We'll just send a hardcoded message in this example 
-      socket.write(constructReply({ message: 'Hello from the server!' }));
+      socket.write(constructReply({ message: 'Hello from the server!hhh' }));
+
     } else if (message === null) {
       console.log('WebSocket connection closed by the client.');
     }
@@ -65,6 +70,10 @@ server.on('upgrade', (req, socket) => {
 
 
 });
+
+
+
+
 
 function constructReply(data) {
   // TODO: Construct a WebSocket frame Node.js socket buffer
@@ -101,6 +110,7 @@ function parseMessage(buffer) {
   if (opCode !== 0x1)
     return;
   const secondByte = buffer.readUInt8(1);
+  console.log("buffer"+buffer.length);
   const isMasked = Boolean((secondByte >>> 7) & 0x1);
   // Keep track of our current position as we advance through the buffer 
   let currentOffset = 2; let payloadLength = secondByte & 0x7F;
@@ -118,9 +128,11 @@ function parseMessage(buffer) {
       throw new Error('Large payloads not currently implemented');
     }
   }
-  const data = Buffer.alloc(payloadLength);
+  let data = Buffer.alloc(payloadLength);
+  console.log("isasked:"+isMasked);
   if (isMasked) {
     maskingKey = buffer.readUInt32BE(currentOffset);
+    console.log("maslingKey "+maskingKey);
     currentOffset += 4;
 
     // Loop through the source buffer one byte at a time, keeping track of which
@@ -132,12 +144,14 @@ function parseMessage(buffer) {
       // Read a byte from the source buffer 
       const source = buffer.readUInt8(currentOffset++);
       // XOR the source byte and write the result to the data 
-      buffer.data.writeUInt8(mask ^ source, i);
+      
+     data= buffer.writeUInt8(mask^source, i);
     }
   } else {
     // Not masked - we can just read the data as-is
     buffer.copy(data, 0, currentOffset++);
   }
-  const json = data.toString('utf8'); return JSON.parse(json);
+  console.log("data:"+data)
+  const json = data.toString(8); return JSON.parse(json);
 
 }

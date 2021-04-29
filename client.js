@@ -2,9 +2,11 @@ console.log('WebSocket client script will run here.');
 const ws = new WebSocket('ws://localhost:7777', ['json', 'xml']);
 alert(ws)
 ws.addEventListener('open', () => {
-  console.log(ws);
-  const data = { message: 'Hello from the client!' }
+ // console.log(ws);
+  const data = { message: '' }
+  
   const json = JSON.stringify(data);
+  console.log(json);
   ws.send(json);
 });
 ws.addEventListener('message', event => {
